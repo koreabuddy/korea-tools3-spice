@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>韓国 辛さレベル診断</title>
+<style>
+  :root{
+    --bg:#1a0f0a;
+    --red1:#ff6b3d;
+    --red2:#e8402a;
+    --red3:#c81e1e;
+    --dark:#2b1810;
+    --gray:#8a7a70;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+    background:radial-gradient(circle at 50% 0%, #3a1a10 0%, #1a0f0a 60%);
+    color:var(--dark);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+  }
+  .app{
+    width:100%; max-width:480px; min-height:100vh;
+    background:linear-gradient(180deg,#fff8f2 0%,#fff 100%);
+    box-shadow:0 0 40px rgba(0,0,0,.4);
+    overflow-x:hidden;
+  }
+  header{
+    padding:18px 20px 14px; text-align:center;
+    background:linear-gradient(135deg,var(--red2),var(--red3));
+    color:#fff; position:sticky; top:0; z-index:5;
+  }
+  header h1{margin:0; font-size:19px; letter-spacing:-0.3px;}
+  header p{margin:4px 0 0; font-size:12px; opacity:.9;}
+
+  .screen{padding:24px 20px 60px; display:none; animation:fadeIn .35s ease;}
+  .screen.active{display:block;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+  .intro-emoji{font-size:64px; text-align:center; margin:10px 0;}
+  .intro-title{font-size:22px; font-weight:800; text-align:center; margin:0 0 10px; line-height:1.4;}
+  .intro-desc{font-size:14px; color:var(--gray); text-align:center; line-height:1.8; margin-bottom:22px;}
+  .badge-row{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:26px;}
+  .badge{background:#fff0e8; color:var(--red2); font-size:11.5px; padding:6px 10px; border-radius:20px; font-weight:700; border:1px solid #ffd8c2;}
+
+  .btn{
+    display:block; width:100%; padding:16px; border:none; border-radius:14px;
+    background:linear-gradient(135deg,var(--red1),var(--red3));
+    color:#fff; font-size:16px; font-weight:800; cursor:pointer;
+    box-shadow:0 8px 20px rgba(232,64,42,.35); transition:transform .12s ease;
+  }
+  .btn:active{transform:scale(.97);}
+  .btn.secondary{
+    background:#fff; color:var(--red2); border:2px solid var(--red2);
+    box-shadow:none; margin-top:10px;
+  }
+
+  .progress-wrap{margin-bottom:22px;}
+  .progress-bar{height:8px; background:#f1e4da; border-radius:8px; overflow:hidden;}
+  .progress-fill{height:100%; background:linear-gradient(90deg,var(--red1),var(--red3)); width:0%; transition:width .35s ease; border-radius:8px;}
+  .progress-label{font-size:12px; color:var(--gray); margin-top:6px; text-align:right; font-weight:600;}
+  .q-num{font-size:12px; font-weight:800; color:var(--red2); letter-spacing:.5px; margin-bottom:8px;}
+  .q-text{font-size:19px; font-weight:800; line-height:1.6; margin-bottom:20px; color:var(--dark);}
+  .option{
+    display:flex; align-items:center; gap:12px; width:100%; text-align:left;
+    padding:16px 14px; margin-bottom:12px;
+    border:2px solid #f1e4da; border-radius:14px; background:#fff;
+    font-size:15px; font-weight:600; color:var(--dark); cursor:pointer; transition:.15s ease;
+  }
+  .option:active{transform:scale(.98); background:#fff3ec; border-color:var(--red1);}
+  .option .emoji{font-size:22px;}
+
+  .gauge-wrap{display:flex; justify-content:center; margin:10px 0 4px;}
+  .result-level{text-align:center; font-size:13px; font-weight:700; color:var(--red2); letter-spacing:1px; margin-top:6px;}
+  .result-title{text-align:center; font-size:26px; font-weight:900; margin:4px 0 4px; color:var(--dark);}
+  .result-sub{text-align:center; font-size:13.5px; color:var(--gray); margin-bottom:22px; line-height:1.6;}
+  .score-num{font-weight:900; color:var(--red2);}
+
+  .section-title{font-size:14px; font-weight:800; color:var(--dark); margin:26px 0 10px; display:flex; align-items:center; gap:6px;}
+  .food-card{
+    background:#fff8f2; border:1px solid #ffe3d0;
+    border-radius:12px; padding:14px; margin-bottom:10px;
+  }
+  .food-top{display:flex; justify-content:space-between; align-items:flex-start;}
+  .food-name{font-weight:700; font-size:15px; color:var(--dark);}
+  .food-kr{font-size:12px; color:var(--red2); font-weight:700; margin-top:2px;}
+  .food-desc{font-size:12px; color:var(--gray); margin-top:6px; line-height:1.5;}
+  .food-flame{font-size:16px; white-space:nowrap; margin-left:8px;}
+
+  .phrase-card{
+    background:var(--dark); color:#fff; border-radius:14px;
+    padding:16px; margin-bottom:10px;
+  }
+  .phrase-kr{font-size:18px; font-weight:800;}
+  .phrase-read{font-size:13px; color:#ffb894; margin-top:2px;}
+  .phrase-desc{font-size:12px; opacity:.85; margin-top:8px; color:#d8c8bf; line-height:1.6;}
+
+  .disclaimer{
+    font-size:11px; color:var(--gray); background:#f6f1ec;
+    border-radius:10px; padding:12px 14px; margin-top:24px; line-height:1.7;
+  }
+  .footer-note{text-align:center; font-size:11px; color:#c2b3a8; margin-top:20px;}
+
+  .toast{
+    position:fixed; bottom:24px; left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:var(--dark); color:#fff; padding:12px 20px;
+    border-radius:30px; font-size:13px; font-weight:600;
+    opacity:0; pointer-events:none; transition:.3s ease; z-index:50;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>🌶️ 韓国 辛さレベル診断</h1>
+    <p>あなたにぴったりの韓国料理を見つけよう</p>
+  </header>
+
+  <!-- INTRO -->
+  <div class="screen active" id="screen-intro">
+    <div class="intro-emoji">🔥🌶️😅</div>
+    <div class="intro-title">あなたの「辛さレベル」は？<br>6問でわかる韓国グルメ診断</div>
+    <div class="intro-desc">
+      韓国旅行で何を食べるか迷ってない？<br>
+      普段の食生活や体の反応をもとに、<br>
+      あなたの辛さ耐性に合ったメニューと<br>
+      注文フレーズをご提案します。
+    </div>
+    <div class="badge-row">
+      <span class="badge">🍽️ おすすめメニュー付き</span>
+      <span class="badge">🗣️ 韓国語フレーズ付き</span>
+      <span class="badge">📤 シェアOK</span>
+    </div>
+    <button class="btn" onclick="startQuiz()">診断スタート →</button>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="screen" id="screen-quiz">
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-label" id="progressLabel">1 / 6</div>
+    </div>
+    <div class="q-num" id="qNum">QUESTION 1</div>
+    <div class="q-text" id="qText"></div>
+    <div id="optionsWrap"></div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="screen" id="screen-result">
+    <div class="gauge-wrap">
+      <svg width="220" height="130" viewBox="0 0 220 130">
+        <path d="M20,120 A100,100 0 0,1 200,120" fill="none" stroke="#f1e4da" stroke-width="16" stroke-linecap="round"/>
+        <path id="gaugeArc" d="M20,120 A100,100 0 0,1 200,120" fill="none" stroke="url(#gaugeGrad)" stroke-width="16" stroke-linecap="round" stroke-dasharray="251" stroke-dashoffset="251"/>
+        <defs>
+          <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#3ecf6e"/>
+            <stop offset="50%" stop-color="#ffb800"/>
+            <stop offset="100%" stop-color="#c81e1e"/>
+          </linearGradient>
+        </defs>
+        <text x="110" y="108" text-anchor="middle" font-size="40" id="gaugeEmoji">🌶️</text>
+      </svg>
+    </div>
+    <div class="result-level" id="resultLevel">LEVEL 1</div>
+    <div class="result-title" id="resultTitle">辛さビギナー</div>
+    <div class="result-sub">スコア <span class="score-num" id="resultScore">0</span>/18点</div>
+
+    <div class="section-title">🍽️ あなたにぴったりのメニュー</div>
+    <div id="foodList"></div>
+
+    <div class="section-title">🗣️ 注文で使えるひとこと</div>
+    <div class="phrase-card">
+      <div class="phrase-kr" id="phraseKr">-</div>
+      <div class="phrase-read" id="phraseRead">-</div>
+      <div class="phrase-desc" id="phraseDesc">-</div>
+    </div>
+
+    <button class="btn" onclick="shareResult()">📤 結果をシェアする</button>
+    <button class="btn secondary" onclick="restart()">🔄 もう一度診断する</button>
+
+    <div class="disclaimer">
+      本診断は娯楽目的の参考情報です。実際の辛さは調理法・店舗・個人差によって変わります。辛い料理を食べる際は体調に合わせてお楽しみください。
+    </div>
+    <div class="footer-note">Made for travelers in Korea · 無料Webアプリ</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const questions = [
+  {
+    text: "普段の食事で、辛いものはどのくらい食べますか？",
+    options: [
+      {label:"ほとんど食べない。辛いのは苦手", emoji:"😌", score:0},
+      {label:"たまに食べる（日本の中辛カレー程度）", emoji:"🍛", score:1},
+      {label:"よく食べる（辛口・激辛メニューも好き）", emoji:"😋", score:2},
+      {label:"辛くないと物足りない。激辛大好き", emoji:"🔥", score:3},
+    ]
+  },
+  {
+    text: "辛いものを食べると、体はどうなりますか？",
+    options: [
+      {label:"すぐ口が痛くなって食べられなくなる", emoji:"😣", score:0},
+      {label:"汗が出て水を大量に飲む", emoji:"💧", score:1},
+      {label:"汗はかくが最後まで食べられる", emoji:"😅", score:2},
+      {label:"ほとんど辛さを感じない・刺激が心地いい", emoji:"😈", score:3},
+    ]
+  },
+  {
+    text: "韓国の辛ラーメンを食べたら（想像したら）どうなる？",
+    options: [
+      {label:"辛すぎて食べられない", emoji:"🚫", score:0},
+      {label:"辛いけど頑張れば完食できる", emoji:"😓", score:1},
+      {label:"普通に美味しく完食できる", emoji:"😊", score:2},
+      {label:"物足りない。もっと辛くてもいい", emoji:"🌋", score:3},
+    ]
+  },
+  {
+    text: "日本でカレーや麻婆豆腐を頼むとき、辛さは？",
+    options: [
+      {label:"いつも甘口かマイルドを選ぶ", emoji:"🥛", score:0},
+      {label:"中辛を選ぶ", emoji:"🍲", score:1},
+      {label:"辛口を選ぶ", emoji:"🌶️", score:2},
+      {label:"一番辛いメニューを選ぶ", emoji:"💀", score:3},
+    ]
+  },
+  {
+    text: "辛いものを食べた後に「もっと食べたい」と思う？",
+    options: [
+      {label:"全然思わない。もう辛いのはいい", emoji:"🙅", score:0},
+      {label:"次は少し控えようと思う", emoji:"😮‍💨", score:1},
+      {label:"また食べたいと思う", emoji:"😌", score:2},
+      {label:"もっと辛いものを探したくなる", emoji:"🏃", score:3},
+    ]
+  },
+  {
+    text: "韓国旅行で挑戦してみたい料理は？",
+    options: [
+      {label:"辛くないもの（サムギョプサル・ビビンバなど）", emoji:"🥩", score:0},
+      {label:"屋台のトッポギくらいは試したい", emoji:"🍢", score:1},
+      {label:"プルダックポックンミョンに挑戦したい", emoji:"🍜", score:2},
+      {label:"一番辛いもの全部制覇したい", emoji:"🏆", score:3},
+    ]
+  },
+];
+
+let current = 0;
+let total = 0;
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function startQuiz(){
+  current = 0; total = 0;
+  showScreen('screen-quiz');
+  renderQuestion();
+}
+
+function renderQuestion(){
+  const q = questions[current];
+  document.getElementById('qNum').textContent = `QUESTION ${current+1}`;
+  document.getElementById('qText').textContent = q.text;
+  document.getElementById('progressFill').style.width = Math.round(current/questions.length*100) + '%';
+  document.getElementById('progressLabel').textContent = `${current+1} / ${questions.length}`;
+  const wrap = document.getElementById('optionsWrap');
+  wrap.innerHTML = '';
+  q.options.forEach(opt=>{
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.innerHTML = `<span class="emoji">${opt.emoji}</span><span>${opt.label}</span>`;
+    btn.onclick = ()=>selectOption(opt.score);
+    wrap.appendChild(btn);
+  });
+}
+
+function selectOption(score){
+  total += score;
+  current++;
+  if(current < questions.length){
+    renderQuestion();
+  } else {
+    document.getElementById('progressFill').style.width = '100%';
+    setTimeout(showResult, 250);
+  }
+}
+
+const levels = [
+  {
+    min:0, max:3,
+    title:"辛さビギナー", tag:"LEVEL 1 · NO SPICE", emoji:"😌",
+    foods:[
+      {
+        name:"サムギョプサル",
+        kr:"삼겹살", flame:"",
+        desc:"豚バラ肉の炭火焼き。辛さゼロで韓国料理の定番。タレで調整できる。"
+      },
+      {
+        name:"ビビンバ",
+        kr:"비빔밥", flame:"",
+        desc:"野菜・肉・卵をご飯と混ぜる料理。「コチュジャン少なめで」と伝えればほぼ辛くない。"
+      },
+      {
+        name:"スンドゥブチゲ（豆腐鍋）",
+        kr:"순두부찌개", flame:"🌶️",
+        desc:"ふわふわ豆腐の鍋。辛さ調整ができる店が多い。「안 맵게」で優しい味に。"
+      },
+    ],
+    phraseKr:"안 맵게 해주세요",
+    phraseRead:"アン メプケ ヘジュセヨ",
+    phraseDesc:"「辛くしないでください」。ほぼすべての店で通じる最重要フレーズ。"
+  },
+  {
+    min:4, max:7,
+    title:"マイルド派", tag:"LEVEL 2 · MILD SPICE", emoji:"🙂",
+    foods:[
+      {
+        name:"トッポギ（屋台・基本の辛さ）",
+        kr:"떡볶이", flame:"🌶️",
+        desc:"もち米の棒と魚の練り物をコチュジャンで炒めた定番屋台メシ。ピリ辛程度。"
+      },
+      {
+        name:"テンジャンチゲ（味噌鍋）",
+        kr:"된장찌개", flame:"",
+        desc:"韓国版みそ汁。辛さはほぼなく、豆腐や野菜が入ったほっこり系。"
+      },
+      {
+        name:"チキン（ヤンニョムチキン・軽辛）",
+        kr:"양념치킨", flame:"🌶️",
+        desc:"甘辛ソースのフライドチキン。辛味より甘みが強く食べやすい。"
+      },
+    ],
+    phraseKr:"조금만 맵게 해주세요",
+    phraseRead:"チョグムマン メプケ ヘジュセヨ",
+    phraseDesc:"「少しだけ辛くしてください」。ピリ辛くらいに抑えたい時に便利。"
+  },
+  {
+    min:8, max:11,
+    title:"中辛レベル", tag:"LEVEL 3 · MEDIUM SPICE", emoji:"😋",
+    foods:[
+      {
+        name:"辛ラーメン",
+        kr:"신라면", flame:"🌶️🌶️",
+        desc:"韓国を代表するインスタント麺。日本の辛口ラーメンより辛め。お湯少なめで辛さ調整可。"
+      },
+      {
+        name:"プデチゲ（部隊鍋）",
+        kr:"부대찌개", flame:"🌶️🌶️",
+        desc:"ソーセージ・ハム・野菜・チーズを一緒に煮込む鍋料理。辛さの中にうまみが深い。"
+      },
+      {
+        name:"マーラータン（中辛）",
+        kr:"마라탕", flame:"🌶️🌶️",
+        desc:"具材を自分で選べる辛い鍋スープ。辛さレベルを選べる店が多い。中辛がちょうどいい入門。"
+      },
+    ],
+    phraseKr:"보통 맵기로 주세요",
+    phraseRead:"ポトン メプギロ ジュセヨ",
+    phraseDesc:"「普通の辛さでください」。平均的な韓国人の辛さ感覚に合わせてもらえる。"
+  },
+  {
+    min:12, max:15,
+    title:"本格辛党", tag:"LEVEL 4 · HOT SPICE", emoji:"🥵",
+    foods:[
+      {
+        name:"プルダックポックンミョン",
+        kr:"불닭볶음면", flame:"🌶️🌶️🌶️",
+        desc:"鶏肉の激辛炒め麺。日本でも話題の「プルダック」。本場は想像以上に辛い。"
+      },
+      {
+        name:"チョンヤンコチュ入り料理",
+        kr:"청양고추 요리", flame:"🌶️🌶️🌶️",
+        desc:"青唐辛子（チョンヤン）は韓国産の激辛唐辛子。料理に入っていたら本格的な辛さのサイン。"
+      },
+      {
+        name:"マーラーシャングオ（最大辛さ）",
+        kr:"마라샹궈", flame:"🌶️🌶️🌶️",
+        desc:"麻辣ベースの炒め料理。具材を選んで麻辣ソースで絡める。一番辛いレベルが目標。"
+      },
+    ],
+    phraseKr:"맵게 해주세요, 괜찮아요",
+    phraseRead:"メプケ ヘジュセヨ、ケンチャナヨ",
+    phraseDesc:"「辛くしてください、大丈夫です」。辛さに自信があるときに頼もしい一言。"
+  },
+  {
+    min:16, max:18,
+    title:"地獄の辛さマスター", tag:"LEVEL 5 · HELLFIRE", emoji:"🔥",
+    foods:[
+      {
+        name:"ヘクプルダックポックンミョン",
+        kr:"핵불닭볶음면", flame:"🌶️🌶️🌶️🌶️",
+        desc:"プルダック史上最高辛さのシリーズ。辛さに自信がある人へ。牛乳は必ず用意して。"
+      },
+      {
+        name:"チョンヤンコチュまるごとの料理",
+        kr:"청양고추 통째로", flame:"🌶️🌶️🌶️🌶️",
+        desc:"青唐辛子を丸ごと使った料理や薬味をフル投入した激辛メニュー。本場の辛さを体感できる。"
+      },
+      {
+        name:"辛ラーメン ザ・レッド",
+        kr:"신라면 더 레드", flame:"🌶️🌶️🌶️🌶️",
+        desc:"通常の辛ラーメンの約3倍の辛さ。激辛好きでも汗が止まらないレベル。"
+      },
+    ],
+    phraseKr:"제일 맵게 해주세요",
+    phraseRead:"チェイル メプケ ヘジュセヨ",
+    phraseDesc:"「一番辛くしてください」。これを言える人は本物。水より牛乳を準備して。"
+  },
+];
+
+function getLevel(score){
+  return levels.find(l=>score>=l.min && score<=l.max) || levels[levels.length-1];
+}
+
+function showResult(){
+  const lvl = getLevel(total);
+  document.getElementById('resultLevel').textContent = lvl.tag;
+  document.getElementById('resultTitle').textContent = lvl.title;
+  document.getElementById('resultScore').textContent = total;
+  document.getElementById('gaugeEmoji').textContent = lvl.emoji;
+
+  const foodList = document.getElementById('foodList');
+  foodList.innerHTML = '';
+  lvl.foods.forEach(f=>{
+    const div = document.createElement('div');
+    div.className = 'food-card';
+    div.innerHTML = `
+      <div class="food-top">
+        <div>
+          <div class="food-name">${f.name} <span class="food-flame">${f.flame}</span></div>
+          <div class="food-kr">${f.kr}</div>
+        </div>
+      </div>
+      <div class="food-desc">${f.desc}</div>
+    `;
+    foodList.appendChild(div);
+  });
+
+  document.getElementById('phraseKr').textContent = lvl.phraseKr;
+  document.getElementById('phraseRead').textContent = lvl.phraseRead;
+  document.getElementById('phraseDesc').textContent = lvl.phraseDesc;
+
+  showScreen('screen-result');
+
+  const arcLength = 251;
+  const offset = arcLength - (arcLength * total / 18);
+  const arc = document.getElementById('gaugeArc');
+  arc.style.transition = 'none';
+  arc.setAttribute('stroke-dashoffset', arcLength);
+  setTimeout(()=>{
+    arc.style.transition = 'stroke-dashoffset 1.1s cubic-bezier(.25,.8,.35,1)';
+    arc.setAttribute('stroke-dashoffset', offset);
+  }, 80);
+}
+
+function restart(){ showScreen('screen-intro'); }
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+function shareResult(){
+  const lvl = getLevel(total);
+  const text = `🌶️ 韓国 辛さレベル診断\n私のレベルは「${lvl.title}」(${total}/18点)！\nあなたも試してみて👇\n#韓国旅行 #韓国グルメ`;
+  if(navigator.share){
+    navigator.share({title:'韓国 辛さレベル診断', text}).catch(()=>{});
+  } else if(navigator.clipboard){
+    navigator.clipboard.writeText(text + '\n' + location.href).then(()=>showToast('コピーしました！')).catch(()=>showToast('コピーできませんでした'));
+  }
+}
+</script>
+</body>
+</html>
