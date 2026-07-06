@@ -113,6 +113,18 @@
     opacity:0; pointer-events:none; transition:.3s ease; z-index:50;
   }
   .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  .share-btns{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }
+  .share-btn{
+    padding:12px 8px; border-radius:12px; border:none;
+    font-size:13px; font-weight:700; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    transition:transform .1s ease;
+  }
+  .share-btn:active{ transform:scale(.96); }
+  .share-btn-x{ background:#000; color:#fff; }
+  .share-btn-line{ background:#06C755; color:#fff; }
+  .share-btn-threads{ background:#000; color:#fff; }
+  .share-btn-copy{ background:#f6f1ec; color:var(--dark); border:1.5px solid #e5d9d0; }
 </style>
 </head>
 <body>
@@ -181,7 +193,12 @@
       <div class="phrase-desc" id="phraseDesc">-</div>
     </div>
 
-    <button class="btn" onclick="shareResult()">📤 結果をシェアする</button>
+    <div class="share-btns">
+      <button class="share-btn share-btn-x" onclick="shareX()">𝕏 X</button>
+      <button class="share-btn share-btn-line" onclick="shareLine()">💬 LINE</button>
+      <button class="share-btn share-btn-threads" onclick="shareThreads()">🧵 Threads</button>
+      <button class="share-btn share-btn-copy" onclick="shareCopy()">📋 コピー</button>
+    </div>
     <button class="btn secondary" onclick="restart()">🔄 もう一度診断する</button>
 
     <div class="disclaimer">
@@ -471,14 +488,16 @@ function showToast(msg){
   setTimeout(()=>t.classList.remove('show'), 2200);
 }
 
-function shareResult(){
+function getShareText(){
   const lvl = getLevel(total);
-  const text = `🌶️ 韓国 辛さレベル診断\n私のレベルは「${lvl.title}」(${total}/18点)！\nあなたも試してみて👇\n#韓国旅行 #韓国グルメ`;
-  if(navigator.share){
-    navigator.share({title:'韓国 辛さレベル診断', text}).catch(()=>{});
-  } else if(navigator.clipboard){
-    navigator.clipboard.writeText(text + '\n' + location.href).then(()=>showToast('コピーしました！')).catch(()=>showToast('コピーできませんでした'));
-  }
+  return `🌶️ 韓国 辛さレベル診断\n私のレベルは「${lvl.title}」(${total}/18点)！\nあなたも試してみて👇\n#韓国旅行 #韓国グルメ`;
+}
+function shareX(){ window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(getShareText()),'_blank'); }
+function shareLine(){ window.open('https://social-plugins.line.me/lineit/share?text='+encodeURIComponent(getShareText()),'_blank'); }
+function shareThreads(){ window.open('https://www.threads.net/intent/post?text='+encodeURIComponent(getShareText()),'_blank'); }
+async function shareCopy(){
+  try{ await navigator.clipboard.writeText(getShareText()); showToast('コピーしました！'); }
+  catch(e){ showToast('コピーできませんでした'); }
 }
 </script>
 </body>
